@@ -1,0 +1,12 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 4/Dez/2013, 22:25:24
+    Author     : Mercury
+*/
+
+#container { position: relative; }
+#dragCanvas { border: 1px solid #000; }
