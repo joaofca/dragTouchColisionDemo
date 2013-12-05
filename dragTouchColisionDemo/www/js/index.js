@@ -50,5 +50,3 @@ var app = {
 
 //Navigation Functions
 function navigateToDrag(){ window.location = "pages/drag.html"; };
-function navigateToTouch(){ window.location = "pages/touch.html"; };
-function navigateToCollision(){ window.location = "pages/collision.html"; };

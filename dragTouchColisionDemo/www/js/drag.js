@@ -26,9 +26,11 @@ var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop; // Paddi
 var offsetx, offsety;
 
 //TESTES
-addObject(200, 200, 100, 100, '#FFC02B', false);
-addObject(25, 90, 100, 200, '#2BB8FF', false);
-addObject(200, 60, 150, 100, '#FFC0FF', true);
+addObject("square", 200, 200, 100, 100, '#FFC02B', false, true);
+addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false);
+addObject("fork", 200, 100, 50, 100, '#2BB8FF', true, false);
+addObject("fork", 150, 150, 50, 200, '#2BB8FF', true, false);
+addImage("robot", 400, 400, 150, 150, "../img/scream.jpg", true, false);
 
 init();
 
@@ -58,25 +60,58 @@ function init()
 
 function object()
 {
+    this.type = "rectangle";
+    this.id = "square";
     this.x = 0;
     this.y = 0;
     this.w = 0;
     this.h = 0;
     this.fill = '#444444';
-    this.touch = false;
+    this.ghost = false;
+    this.selectable = false;
     this.inColision = false;
     this.ObjectsColiding = [];
 }
 
-function addObject(posX, posY, width, height, fill, touch)
+function imageObj()
+{
+    this.type = "image";
+    this.id = "imgObj";
+    this.x = 0;    
+    this.y = 0;
+    this.w = 0;
+    this.h = 0;
+    this.ghost = true;
+    this.selectable = false;
+    this.path = "../img/scream.jpg";
+}
+
+function addImage(id, posX, posY, width, height, path, ghost, selectable)
+{
+    var img = new imageObj();
+    img.id = id;
+    img.x = posX;
+    img.y = posY;
+    img.w = width;
+    img.h = height;
+    img.ghost = ghost;
+    img.path = path;
+    img.selectable = selectable;
+    Objects.push(img);
+    invalidate();
+}
+
+function addObject(id, posX, posY, width, height, fill, ghost, selectable)
 {
     var obj = new object();
+    obj.id = id;
     obj.x = posX;
     obj.y = posY;
     obj.w = width;
     obj.h = height;
     obj.fill = fill;
-    obj.touch = touch;
+    obj.ghost = ghost;
+    obj.selectable = selectable;
     Objects.push(obj);
     invalidate();
 }
@@ -116,13 +151,37 @@ function ClickedObject(e)
     return null;
 }
 
-// Happens when the mouse is moving inside the canvas
-function myMove(e){
-  if (isDrag){
+function myMove(e){ //Eu estive aqui - JA
+  if (isDrag)
+  {
     getMouse(e);
-    
-    selectedObject.x = mousePosX - offsetx;
-    selectedObject.y = mousePosY - offsety;   
+   
+    var xOldValue;
+    var yOldValue;
+    var xNewValue;
+    var yNewValue;
+           
+    var l = Objects.length;
+    for (var i = 0; i < l; i++) 
+    {
+        if(Objects[i] === selectedObject)
+        {
+            xOldValue = Objects[i].x;
+            yOldValue = Objects[i].y;
+            xNewValue = Objects[i].x = mousePosX - offsetx;
+            yNewValue = Objects[i].y = mousePosY - offsety;  
+            break;
+        }
+    }
+      
+    for (var i = 0; i < l; i++) 
+    {
+        if(Objects[i].id === selectedObject.id && Objects[i] !== selectedObject)
+        {
+            Objects[i].x = Objects[i].x -(xOldValue - xNewValue);
+            Objects[i].y = Objects[i].y -(yOldValue - yNewValue);
+        }
+    }
     
     // something is changing position so we better invalidate the canvas!
     invalidate();
@@ -132,6 +191,7 @@ function myMove(e){
 function myUp(){
   isDrag = false;
   canvas.onmousemove = null;
+  selectedObject = null;
 }
 
 function myDblClick(e)
@@ -140,22 +200,26 @@ function myDblClick(e)
 }
 
 function draw() 
-{
+{   
   if (canvasValid === false) 
   {
     clear(canvasContext);
-    
+
     // Add stuff you want drawn in the background all the time here
     
     // draw all boxes
     var l = Objects.length;
-    for (var i = 0; i < l; i++) {
-        drawshape(canvasContext, Objects[i], Objects[i].fill);
+    for (var i = 0; i < l; i++) 
+    {
+        if(Objects[i].type === "rectangle")
+            drawshape(Objects[i], Objects[i].fill);
+        else if(Objects[i].type === "image")
+            drawimage(Objects[i]);
     }
     
     // draw selection
     // right now this is just a stroke along the edge of the selected box
-    if (selectedObject !== null) {
+    if (selectedObject !== null && selectedObject.selectable) {
       canvasContext.strokeStyle = mySelColor;
       canvasContext.lineWidth = mySelWidth;
       canvasContext.strokeRect(selectedObject.x,selectedObject.y,selectedObject.w,selectedObject.h);
@@ -163,19 +227,27 @@ function draw()
     
     // Add stuff you want drawn on top all the time here
     
-    
     canvasValid = true;
   }
 }
 
-function drawshape(context, shape, fill) {
-  context.fillStyle = fill;
-  
-  // We can skip the drawing of elements that have moved off the screen:
-  if (shape.x > width || shape.y > height) return; 
-  if (shape.x + shape.w < 0 || shape.y + shape.h < 0) return;
-  
-  context.fillRect(shape.x,shape.y,shape.w,shape.h);
+function drawimage(imageObj)
+{
+    var img = document.getElementById("scream");
+    //img.src = "../img/scream.jpg";
+   
+    canvasContext.drawImage(img, imageObj.x, imageObj.y, imageObj.w, imageObj.h);
+}
+
+function drawshape(shape, fill) 
+{
+    canvasContext.fillStyle = fill;
+
+    // We can skip the drawing of elements that have moved off the screen:
+    if (shape.x > width || shape.y > height) return; 
+    if (shape.x + shape.w < 0 || shape.y + shape.h < 0) return;
+
+    canvasContext.fillRect(shape.x,shape.y,shape.w,shape.h);
 }
 
 function getMouse(e) {
