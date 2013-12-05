@@ -30,7 +30,7 @@ addObject("square", 200, 200, 100, 100, '#FFC02B', false, true);
 addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false);
 addObject("fork", 200, 100, 50, 100, '#2BB8FF', true, false);
 addObject("fork", 150, 150, 50, 200, '#2BB8FF', true, false);
-addImage("robot", 400, 400, 150, 150, "../img/scream.jpg", true, false);
+addImage("robot", 150, 150, 150, 150, "../img/scream.jpg", true, false);
 
 init();
 
