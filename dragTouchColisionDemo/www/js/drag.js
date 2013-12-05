@@ -13,7 +13,7 @@ var mousePosX;
 var mousePosY;
 var isDrag = false;
 
-var refershRate = 20;
+var refreshRate = 20;
 
 var Objects = [];
 
@@ -34,6 +34,8 @@ init();
 function init()
 {
     canvas = document.getElementById("dragCanvas"); 
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     canvasContext = canvas.getContext('2d');
     height = canvas.height;
     width = canvas.width;
@@ -50,7 +52,7 @@ function init()
         styleBorderTop   = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)   || 0;
     }
     
-    setInterval(draw, refershRate);
+    setInterval(draw, refreshRate);
 };
 
 function object()
@@ -89,11 +91,9 @@ function mouseDown(e)
     
     if(selectedObject !== null)
     {
+        isDrag = true;
         offsetx = mousePosX - selectedObject.x;
         offsety = mousePosY - selectedObject.y;
-        selectedObject.x = mousePosX - offsetx;
-        selectedObject.y = mousePosY - offsety;
-        isDrag = true;
         canvas.onmousemove = myMove;
     }
 }
@@ -109,38 +109,6 @@ function ClickedObject(e)
                 return Objects[i];
     }
     return null;
-}
-
-function myDown(e)
-{
-getMouse(e);
-  clear(canvasContext);
-  var l = Objects.length;
-  for (var i = l-1; i >= 0; i--) 
-  {
-    // get image data at the mouse x,y pixel
-    var imageData = canvasContext.getImageData(mousePosX, mousePosY, 1, 1);
-    //var index = (mousePosX + mousePosY * imageData.width) * 4;
-    
-    // if the mouse pixel exists, select and break
-    if (imageData.data[3] > 0) {
-      selectedObject = Objects[i];
-      offsetx = mousePosX - selectedObject.x;
-      offsety = mousePosY - selectedObject.y;
-      selectedObject.x = mousePosX - offsetx;
-      selectedObject.y = mousePosY - offsety;
-      isDrag = true;
-      canvas.onmousemove = myMove;
-      invalidate();
-      clear(canvasContext);
-      return;
-    }
-  }
-  selectedObject = null;
-  // clear the ghost canvas for next time
-  clear(canvasContext);
-  // invalidate because we might need the selection border to disappear
-  invalidate();
 }
 
 // Happens when the mouse is moving inside the canvas

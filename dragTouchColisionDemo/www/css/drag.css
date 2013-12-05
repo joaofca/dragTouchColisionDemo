@@ -10,3 +10,9 @@ and open the template in the editor.
 
 #container { position: relative; }
 #dragCanvas { border: 1px solid #000; }
+
+@keyframes whirlOut {
+to {
+    transform: scale(0) rotateZ(1260deg);
+   }
+}
