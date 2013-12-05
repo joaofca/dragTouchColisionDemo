@@ -26,8 +26,9 @@ var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop; // Paddi
 var offsetx, offsety;
 
 //TESTES
-addObject(200, 200, 40, 40, '#FFC02B');
-addObject(25, 90, 25, 25, '#2BB8FF');
+addObject(200, 200, 100, 100, '#FFC02B', false);
+addObject(25, 90, 100, 200, '#2BB8FF', false);
+addObject(200, 60, 150, 100, '#FFC0FF', true);
 
 init();
 
@@ -62,9 +63,12 @@ function object()
     this.w = 0;
     this.h = 0;
     this.fill = '#444444';
+    this.touch = false;
+    this.inColision = false;
+    this.ObjectsColiding = [];
 }
 
-function addObject(posX, posY, width, height, fill)
+function addObject(posX, posY, width, height, fill, touch)
 {
     var obj = new object();
     obj.x = posX;
@@ -72,6 +76,7 @@ function addObject(posX, posY, width, height, fill)
     obj.w = width;
     obj.h = height;
     obj.fill = fill;
+    obj.touch = touch;
     Objects.push(obj);
     invalidate();
 }
