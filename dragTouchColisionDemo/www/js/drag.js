@@ -26,11 +26,16 @@ var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop; // Paddi
 var offsetx, offsety;
 
 //TESTES
-addObject("square", 200, 200, 100, 100, '#FFC02B', false, true);
+addObject("square", 500, 200, 100, 100, '#FFC02B', false, false);
 addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false);
-addObject("fork", 200, 100, 50, 100, '#2BB8FF', true, false);
-addObject("fork", 150, 150, 50, 200, '#2BB8FF', true, false);
-addImage("robot", 150, 150, 150, 150, "../img/scream.jpg", true, false);
+addObject("fork", 200, 100, 50, 100, '#2BB8FF', false, false);
+addObject("fork", 150, 150, 50, 200, '#2BB8FF', false, false);
+addObject("fork", 50, 150, 50, 100, '#2BB8FF', false, false);
+addObject("fork", 250, 150, 50, 100, '#2BB8FF', false, false);
+addObject("fork", 100, 250, 50, 50, '#2BB8FF', false, false);
+addObject("fork", 200, 250, 50, 50, '#2BB8FF', false, false);
+addImage("robot", 275, 325, 150, 150, "logo", false, false);
+addImage("animals", 200, 500, 150, 150, "beaver", false, false);
 
 init();
 
@@ -70,7 +75,7 @@ function object()
     this.ghost = false;
     this.selectable = false;
     this.inColision = false;
-    this.ObjectsColiding = [];
+    this.visible = true;
 }
 
 function imageObj()
@@ -83,10 +88,12 @@ function imageObj()
     this.h = 0;
     this.ghost = true;
     this.selectable = false;
-    this.path = "../img/scream.jpg";
+    this.inColision = false;
+    this.imageId = "logo";
+    this.visible = true;
 }
 
-function addImage(id, posX, posY, width, height, path, ghost, selectable)
+function addImage(id, posX, posY, width, height, imageId, ghost, selectable)
 {
     var img = new imageObj();
     img.id = id;
@@ -95,7 +102,7 @@ function addImage(id, posX, posY, width, height, path, ghost, selectable)
     img.w = width;
     img.h = height;
     img.ghost = ghost;
-    img.path = path;
+    img.imageId = imageId;
     img.selectable = selectable;
     Objects.push(img);
     invalidate();
@@ -144,9 +151,12 @@ function ClickedObject(e)
     var l = Objects.length;
     for (var i = l-1; i >= 0; i--) 
     {
-        if (Objects[i].x <= mousePosX && Objects[i].x + Objects[i].w >= mousePosX)
-            if (Objects[i].y <= mousePosY && Objects[i].y + Objects[i].h >= mousePosY)
-                return Objects[i];
+        if(Objects[i].visible)
+        {
+            if (Objects[i].x <= mousePosX && Objects[i].x + Objects[i].w >= mousePosX)
+                        if (Objects[i].y <= mousePosY && Objects[i].y + Objects[i].h >= mousePosY)
+                            return Objects[i];            
+        }
     }
     return null;
 }
@@ -183,15 +193,79 @@ function myMove(e){ //Eu estive aqui - JA
         }
     }
     
+    ColisionDetection();
     // something is changing position so we better invalidate the canvas!
     invalidate();
   }
 }
 
-function myUp(){
-  isDrag = false;
-  canvas.onmousemove = null;
-  selectedObject = null;
+function SetColisionStatus(objId, inColision)
+{
+    for(var i = 0; i < Objects.length; i++)
+    {
+        if(Objects[i].id === objId)
+        {
+            Objects[i].inColision = inColision;
+        }
+    }
+}
+
+function GetObjectsWithId(id)
+{
+    var ObjectsTemp = [];
+    
+    for(var i = 0; i < Objects.length; i++)
+    {
+        if(Objects[i].id === id)
+            ObjectsTemp.push(Objects[i]);
+    }
+    return ObjectsTemp;
+}
+
+function ColisionDetection()
+{
+    //lista de objectos que compoem o objecto complexo
+    var ObjectsTemp = GetObjectsWithId(selectedObject.id);
+    
+    for(var k = 0; k < ObjectsTemp.length; k++)
+    {
+        for(var i = 0; i < Objects.length; i++)
+        {
+            if(Objects[i] !== ObjectsTemp[k] && !ObjectsTemp[k].ghost && Objects[i].id !== selectedObject.id)
+            {
+                if((ObjectsTemp[k].x + ObjectsTemp[k].w < Objects[i].x || ObjectsTemp[k].x > Objects[i].x + Objects[i].w))
+                {
+                    SetColisionStatus(Objects[i].id, false);
+                }
+                else if(ObjectsTemp[k].y + ObjectsTemp[k].h < Objects[i].y || ObjectsTemp[k].y > Objects[i].y + Objects[i].h)
+                {
+                    SetColisionStatus(Objects[i].id, false);
+                }
+                else if(Objects[i].ghost)
+                {
+                    SetColisionStatus(Objects[i].id, false);
+                }
+                else
+                {
+                    for(var j = 0; j < Objects.length; j++)
+                    {
+                        if(Objects[j].id === Objects[i].id)
+                        {
+                            SetColisionStatus(Objects[j].id, true);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function myUp()
+{
+    isDrag = false;
+    canvas.onmousemove = null;
+    selectedObject = null;
 }
 
 function myDblClick(e)
@@ -211,10 +285,13 @@ function draw()
     var l = Objects.length;
     for (var i = 0; i < l; i++) 
     {
-        if(Objects[i].type === "rectangle")
-            drawshape(Objects[i], Objects[i].fill);
-        else if(Objects[i].type === "image")
-            drawimage(Objects[i]);
+        if(Objects[i].visible)
+        {
+            if(Objects[i].type === "rectangle")
+                drawshape(Objects[i], Objects[i].fill);
+            else if(Objects[i].type === "image")
+                drawimage(Objects[i]);
+        }
     }
     
     // draw selection
@@ -233,10 +310,17 @@ function draw()
 
 function drawimage(imageObj)
 {
-    var img = document.getElementById("scream");
+    var img = document.getElementById(imageObj.imageId);
     //img.src = "../img/scream.jpg";
    
     canvasContext.drawImage(img, imageObj.x, imageObj.y, imageObj.w, imageObj.h);
+    
+    if(imageObj.inColision)
+    {
+      canvasContext.strokeStyle = mySelColor;
+      canvasContext.lineWidth = mySelWidth;
+      canvasContext.strokeRect(imageObj.x,imageObj.y,imageObj.w,imageObj.h);
+    }
 }
 
 function drawshape(shape, fill) 
@@ -248,6 +332,13 @@ function drawshape(shape, fill)
     if (shape.x + shape.w < 0 || shape.y + shape.h < 0) return;
 
     canvasContext.fillRect(shape.x,shape.y,shape.w,shape.h);
+    
+    if(shape.inColision)
+    {
+      canvasContext.strokeStyle = mySelColor;
+      canvasContext.lineWidth = mySelWidth;
+      canvasContext.strokeRect(shape.x,shape.y,shape.w,shape.h);
+    }
 }
 
 function getMouse(e) {
