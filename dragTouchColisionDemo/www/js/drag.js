@@ -1,8 +1,11 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+init();
+////////////////////////////////////////////////////////////////////////////////
+/////// VARIAVEIS GLOBAIS //////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+var WIN = false;
+var LOSE = false;
+
 var canvas;
 var canvasContext;
 var height;
@@ -17,7 +20,6 @@ var refreshRate = 20;
 
 var Objects = [];
 
-// The selected Object
 var mySelColor = '#CC0000';
 var mySelWidth = 2;
 var selectedObject = null; 
@@ -25,43 +27,9 @@ var selectedObject = null;
 var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop; // Padding and border style widths for mouse offsets
 var offsetx, offsety;
 
-//TESTES
-addObject("square", 500, 200, 100, 100, '#FFC02B', false, false);
-addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false);
-addObject("fork", 200, 100, 50, 100, '#2BB8FF', false, false);
-addObject("fork", 150, 150, 50, 200, '#2BB8FF', false, false);
-addObject("fork", 50, 150, 50, 100, '#2BB8FF', false, false);
-addObject("fork", 250, 150, 50, 100, '#2BB8FF', false, false);
-addObject("fork", 100, 250, 50, 50, '#2BB8FF', false, false);
-addObject("fork", 200, 250, 50, 50, '#2BB8FF', false, false);
-addImage("robot", 275, 325, 150, 150, "logo", false, false);
-addImage("animals", 200, 500, 150, 150, "beaver", false, false);
-
-init();
-
-function init()
-{
-    canvas = document.getElementById("dragCanvas"); 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvasContext = canvas.getContext('2d');
-    height = canvas.height;
-    width = canvas.width;
-    
-    canvas.onmousedown = mouseDown;
-    canvas.onmouseup = myUp;
-    canvas.ondblclick = myDblClick;
-    
-    if (document.defaultView && document.defaultView.getComputedStyle) 
-    {
-        stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)      || 0;
-        stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)       || 0;
-        styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10)  || 0;
-        styleBorderTop   = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)   || 0;
-    }
-    
-    setInterval(draw, refreshRate);
-};
+////////////////////////////////////////////////////////////////////////////////
+/////// OBJECTOS ///////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 function object()
 {
@@ -73,8 +41,11 @@ function object()
     this.h = 0;
     this.fill = '#444444';
     this.ghost = false;
-    this.selectable = false;
+    this.selectable = true;
     this.inColision = false;
+    this.colisionDetected = false;
+    this.clicked = false;
+    this.stickyClick = false;
     this.visible = true;
 }
 
@@ -87,13 +58,112 @@ function imageObj()
     this.w = 0;
     this.h = 0;
     this.ghost = true;
-    this.selectable = false;
+    this.selectable = true;
     this.inColision = false;
+    this.colisionDetected = false;
+    this.clicked = false;
+    this.stickyClick = false;
     this.imageId = "logo";
     this.visible = true;
 }
 
-function addImage(id, posX, posY, width, height, imageId, ghost, selectable)
+function labelObject()
+{
+    this.type = "label";
+    this.id = "imgObj";
+    this.x = 0;    
+    this.y = 0;
+    this.w = 0;
+    this.h = 0;
+    this.fontSize = 10;
+    this.font = "Arial";
+    this.ghost = true;
+    this.selectable = false;
+    this.inColision = false;
+    this.colisionDetected = false;
+    this.clicked = false;
+    this.stickyClick = false;
+    this.visible = true;
+    this.text = "Texto";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/////// FUNÇÕES DE INICIALIZAÇÃO ///////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+//Interface das funções de criação de objectos
+//function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick)
+//function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick)
+//function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick)
+
+//Local onde são iniciados os objectos do jogo
+function GameInit()
+{
+    addObject("square", 500, 200, 100, 100, '#FFC02B', false, false, true, true);
+    addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false, true, true);
+    addObject("fork", 200, 100, 50, 100, '#2BB8FF', false, false, true, true);
+    addObject("fork", 150, 150, 50, 200, '#2BB8FF', false, false, true, true);
+    addObject("fork", 50, 150, 50, 100, '#2BB8FF', false, false, true, true);
+    addObject("fork", 250, 150, 50, 100, '#2BB8FF', false, false, true, true);
+    addObject("fork", 100, 250, 50, 50, '#2BB8FF', false, false, true, true);
+    addObject("fork", 200, 250, 50, 50, '#2BB8FF', false, false, true, true);
+    addImage("robot", 275, 325, 150, 150, "logo", false, false, true, true);
+    addImage("animals", 200, 500, 150, 150, "beaver", false, false, true, true);
+    addLabel("pergunta", 0, 0, 300, 100, 22, "Qual é a coisa qual é ela?", "22px verdana", true, true, true, true);
+}
+
+//Função que verifica as regras do jogo, despoletando acções. É chamada no draw()
+function GameRules()
+{
+    
+}
+
+function init()
+{
+    canvas = document.getElementById("dragCanvas"); 
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvasContext = canvas.getContext('2d');
+    height = canvas.height;
+    width = canvas.width;
+    
+    canvas.onmousedown = MouseDown;
+    canvas.onmouseup = MouseUp;
+    canvas.ondblclick = myDblClick;
+    
+    if (document.defaultView && document.defaultView.getComputedStyle) 
+    {
+        stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10)      || 0;
+        stylePaddingTop  = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10)       || 0;
+        styleBorderLeft  = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10)  || 0;
+        styleBorderTop   = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10)   || 0;
+    }
+    
+    setInterval(draw, refreshRate);
+    
+    GameInit();
+};
+
+function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick)
+{
+    var labelObj = new labelObject();
+    labelObj.id = id;
+    labelObj.x = posX;    
+    labelObj.y = posY;
+    labelObj.w = width;
+    labelObj.h = height;
+    labelObj.fontSize = fontSize;
+    labelObj.font = font;
+    labelObj.ghost = ghost;
+    labelObj.selectable = selectable;
+    labelObj.visible = visible;
+    labelObj.text = text;
+    labelObj.stickyClick = stickyClick;
+    Objects.push(labelObj);
+    invalidate();
+}
+
+function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick)
 {
     var img = new imageObj();
     img.id = id;
@@ -104,11 +174,13 @@ function addImage(id, posX, posY, width, height, imageId, ghost, selectable)
     img.ghost = ghost;
     img.imageId = imageId;
     img.selectable = selectable;
+    img.visible = visible;
+    img.stickyClick = stickyClick;
     Objects.push(img);
     invalidate();
 }
 
-function addObject(id, posX, posY, width, height, fill, ghost, selectable)
+function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick)
 {
     var obj = new object();
     obj.id = id;
@@ -119,30 +191,41 @@ function addObject(id, posX, posY, width, height, fill, ghost, selectable)
     obj.fill = fill;
     obj.ghost = ghost;
     obj.selectable = selectable;
+    obj.visible = visible;
+    obj.stickyClick = stickyClick;
     Objects.push(obj);
     invalidate();
 }
 
-function invalidate() {
-  canvasValid = false;
-}
+////////////////////////////////////////////////////////////////////////////////
+/////// FUNÇÕES DE CONTROLO ////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-//wipes the canvas context
-function clear(c) {
-  c.clearRect(0, 0, width, height);
-}
-
-function mouseDown(e)
+function MouseDown(e)
 {
     selectedObject = ClickedObject(e);
+    
+    if(!selectedObject.ghost)
+        selectedObject.clicked = !selectedObject.clicked;
     
     if(selectedObject !== null)
     {
         isDrag = true;
         offsetx = mousePosX - selectedObject.x;
         offsety = mousePosY - selectedObject.y;
-        canvas.onmousemove = myMove;
+        canvas.onmousemove = OnMouseMove;
     }
+    invalidate();
+}
+
+function MouseUp()
+{
+    isDrag = false;
+    canvas.onmousemove = null;
+    if(!selectedObject.stickyClick)
+        selectedObject.clicked = false;
+    selectedObject = null;
+    invalidate();
 }
 
 function ClickedObject(e)
@@ -155,13 +238,14 @@ function ClickedObject(e)
         {
             if (Objects[i].x <= mousePosX && Objects[i].x + Objects[i].w >= mousePosX)
                         if (Objects[i].y <= mousePosY && Objects[i].y + Objects[i].h >= mousePosY)
-                            return Objects[i];            
+                            if(!Objects[i].ghost)
+                                return Objects[i];            
         }
     }
     return null;
 }
 
-function myMove(e){ //Eu estive aqui - JA
+function OnMouseMove(e){ //Eu estive aqui - JA
   if (isDrag)
   {
     getMouse(e);
@@ -199,146 +283,11 @@ function myMove(e){ //Eu estive aqui - JA
   }
 }
 
-function SetColisionStatus(objId, inColision)
-{
-    for(var i = 0; i < Objects.length; i++)
-    {
-        if(Objects[i].id === objId)
-        {
-            Objects[i].inColision = inColision;
-        }
-    }
-}
 
-function GetObjectsWithId(id)
-{
-    var ObjectsTemp = [];
-    
-    for(var i = 0; i < Objects.length; i++)
-    {
-        if(Objects[i].id === id)
-            ObjectsTemp.push(Objects[i]);
-    }
-    return ObjectsTemp;
-}
-
-function ColisionDetection()
-{
-    //lista de objectos que compoem o objecto complexo
-    var ObjectsTemp = GetObjectsWithId(selectedObject.id);
-    
-    for(var k = 0; k < ObjectsTemp.length; k++)
-    {
-        for(var i = 0; i < Objects.length; i++)
-        {
-            if(Objects[i] !== ObjectsTemp[k] && !ObjectsTemp[k].ghost && Objects[i].id !== selectedObject.id)
-            {
-                if((ObjectsTemp[k].x + ObjectsTemp[k].w < Objects[i].x || ObjectsTemp[k].x > Objects[i].x + Objects[i].w))
-                {
-                    SetColisionStatus(Objects[i].id, false);
-                }
-                else if(ObjectsTemp[k].y + ObjectsTemp[k].h < Objects[i].y || ObjectsTemp[k].y > Objects[i].y + Objects[i].h)
-                {
-                    SetColisionStatus(Objects[i].id, false);
-                }
-                else if(Objects[i].ghost)
-                {
-                    SetColisionStatus(Objects[i].id, false);
-                }
-                else
-                {
-                    for(var j = 0; j < Objects.length; j++)
-                    {
-                        if(Objects[j].id === Objects[i].id)
-                        {
-                            SetColisionStatus(Objects[j].id, true);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-function myUp()
-{
-    isDrag = false;
-    canvas.onmousemove = null;
-    selectedObject = null;
-}
 
 function myDblClick(e)
 {
     
-}
-
-function draw() 
-{   
-  if (canvasValid === false) 
-  {
-    clear(canvasContext);
-
-    // Add stuff you want drawn in the background all the time here
-    
-    // draw all boxes
-    var l = Objects.length;
-    for (var i = 0; i < l; i++) 
-    {
-        if(Objects[i].visible)
-        {
-            if(Objects[i].type === "rectangle")
-                drawshape(Objects[i], Objects[i].fill);
-            else if(Objects[i].type === "image")
-                drawimage(Objects[i]);
-        }
-    }
-    
-    // draw selection
-    // right now this is just a stroke along the edge of the selected box
-    if (selectedObject !== null && selectedObject.selectable) {
-      canvasContext.strokeStyle = mySelColor;
-      canvasContext.lineWidth = mySelWidth;
-      canvasContext.strokeRect(selectedObject.x,selectedObject.y,selectedObject.w,selectedObject.h);
-    }
-    
-    // Add stuff you want drawn on top all the time here
-    
-    canvasValid = true;
-  }
-}
-
-function drawimage(imageObj)
-{
-    var img = document.getElementById(imageObj.imageId);
-    //img.src = "../img/scream.jpg";
-   
-    canvasContext.drawImage(img, imageObj.x, imageObj.y, imageObj.w, imageObj.h);
-    
-    if(imageObj.inColision)
-    {
-      canvasContext.strokeStyle = mySelColor;
-      canvasContext.lineWidth = mySelWidth;
-      canvasContext.strokeRect(imageObj.x,imageObj.y,imageObj.w,imageObj.h);
-    }
-}
-
-function drawshape(shape, fill) 
-{
-    canvasContext.fillStyle = fill;
-
-    // We can skip the drawing of elements that have moved off the screen:
-    if (shape.x > width || shape.y > height) return; 
-    if (shape.x + shape.w < 0 || shape.y + shape.h < 0) return;
-
-    canvasContext.fillRect(shape.x,shape.y,shape.w,shape.h);
-    
-    if(shape.inColision)
-    {
-      canvasContext.strokeStyle = mySelColor;
-      canvasContext.lineWidth = mySelWidth;
-      canvasContext.strokeRect(shape.x,shape.y,shape.w,shape.h);
-    }
 }
 
 function getMouse(e) {
@@ -360,4 +309,185 @@ function getMouse(e) {
 
       mousePosX = e.pageX - offsetX;
       mousePosY = e.pageY - offsetY;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/////// FUNÇÕES DE COLISÃO /////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+//Detecta colisões entre objectos
+function ColisionDetection()
+{
+    for(var k = 0; k < Objects.length; k++)
+    {
+        for(var i = 0; i < Objects.length; i++)
+        {
+            var obj1 = Objects[k];
+            var obj2 = Objects[i];
+            
+            if(obj1.id !== obj2.id && !obj1.ghost && !obj2.ghost)   //Se não pertencerem ao mesmo objecto complexo e não forem fantasmas
+            {
+                if(obj1.x + obj1.w > obj2.x && obj1.x < obj2.x)
+                {
+                    if(obj1.y < obj2.y && obj1.y + obj1.h > obj2.y)
+                    {
+                        SetColisionDetectionStatus(obj2.id, true);
+                        SetColisionDetectionStatus(obj1.id, true);
+                    }
+
+                    if(obj1.y < obj2.y + obj2.h && obj1.y > obj2.y)
+                    {
+                        SetColisionDetectionStatus(obj2.id, true);
+                        SetColisionDetectionStatus(obj1.id, true);
+                    }
+                }
+            }
+        }
+    }
+    
+    for(var i = 0; i < Objects.length; i++) //colisionDetection reset
+    {
+        if(Objects[i].colisionDetected)
+        {
+            SetColisionStatus(Objects[i].id, true);
+            Objects[i].colisionDetected = false;
+        }
+        else
+        {
+            SetColisionStatus(Objects[i].id, false);
+        }
+    }
+}
+
+//Coloca a flag de colisão para todos os objectos com o mesmo ID (objecto complexo) com o valor recebido
+function SetColisionStatus(objId, inColision)
+{
+    for(var i = 0; i < Objects.length; i++)
+        if(Objects[i].id === objId)
+            Objects[i].inColision = inColision;
+}
+
+//Coloca a flag de colisionDetected com o status recebido para todos os objectos com o mesmo ID
+function SetColisionDetectionStatus(id, status)
+{
+    for(var i = 0;i < Objects.length; i++)
+        if(Objects[i].id === id)
+            Objects[i].colisionDetected = status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/////// FUNÇÕES DE DESENHO /////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+function draw() 
+{   
+  if (canvasValid === false) 
+  {
+    clear(canvasContext);
+
+    // Add stuff you want drawn in the background all the time here
+    
+    // draw all boxes
+    var l = Objects.length;
+    for (var i = 0; i < l; i++) 
+    {
+        if(Objects[i].visible)
+        {
+            if(Objects[i].type === "rectangle" && Objects[i].visible)
+                drawshape(Objects[i]);
+            else if(Objects[i].type === "image" && Objects[i].visible)
+                drawimage(Objects[i]);
+            else if(Objects[i].type === "label" && Objects[i].visible)
+                drawLabel(Objects[i]);
+        }
+    }
+    
+    // draw selection
+    // right now this is just a stroke along the edge of the selected box
+    if (selectedObject !== null && selectedObject.selectable) {
+      canvasContext.strokeStyle = mySelColor;
+      canvasContext.lineWidth = mySelWidth;
+      canvasContext.strokeRect(selectedObject.x,selectedObject.y,selectedObject.w,selectedObject.h);
+    }
+    
+    // Add stuff you want drawn on top all the time here
+    
+    GameRules();
+    
+    canvasValid = true;
+  }
+}
+
+function drawLabel(labelObj)
+{
+    if(labelObj.visible)
+    {
+        canvasContext.font=labelObj.font;
+        canvasContext.fillText(labelObj.text, labelObj.x, labelObj.y + labelObj.h/2, labelObj.w, labelObj.h);
+
+        if(labelObj.inColision)
+        {
+          canvasContext.strokeStyle = mySelColor;
+          canvasContext.lineWidth = mySelWidth;
+          canvasContext.fillText(labelObj.x,labelObj.y,labelObj.w,labelObj.h);
+        }
+    }
+}
+
+function drawimage(imageObj)
+{
+    var img = document.getElementById(imageObj.imageId);
+    //img.src = "../img/scream.jpg";
+   
+    canvasContext.drawImage(img, imageObj.x, imageObj.y, imageObj.w, imageObj.h);
+    
+    if(imageObj.inColision)
+    {
+      canvasContext.strokeStyle = mySelColor;
+      canvasContext.lineWidth = mySelWidth;
+      canvasContext.strokeRect(imageObj.x,imageObj.y,imageObj.w,imageObj.h);
+    }
+}
+
+function drawshape(shape) 
+{
+    canvasContext.fillStyle = shape.fill;
+
+    // We can skip the drawing of elements that have moved off the screen:
+    if (shape.x > width || shape.y > height) return; 
+    if (shape.x + shape.w < 0 || shape.y + shape.h < 0) return;
+
+    canvasContext.fillRect(shape.x,shape.y,shape.w,shape.h);
+    
+    if(shape.inColision)
+    {
+      canvasContext.strokeStyle = mySelColor;
+      canvasContext.lineWidth = mySelWidth;
+      canvasContext.strokeRect(shape.x,shape.y,shape.w,shape.h);
+    }
+}
+
+function invalidate() {
+  canvasValid = false;
+}
+
+//wipes the canvas context
+function clear(c) {
+  c.clearRect(0, 0, width, height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/////// FUNÇÕES DE PESQUISA ////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+//Devolve todos os objectos que têm o ID recebido (objecto complexo)
+function GetObjectsWithId(id)
+{
+    var ObjectsTemp = [];
+    
+    for(var i = 0; i < Objects.length; i++)
+        if(Objects[i].id === id)
+            ObjectsTemp.push(Objects[i]);
+    
+    return ObjectsTemp;
 }
