@@ -1,10 +1,12 @@
-init();
 ////////////////////////////////////////////////////////////////////////////////
 /////// VARIAVEIS GLOBAIS //////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 var WIN = false;
 var LOSE = false;
+var SCORE = 0;
+var MAXSCORE = 1000;
+var TIMER = 60;
 
 var canvas;
 var canvasContext;
@@ -27,6 +29,8 @@ var selectedObject = null;
 var stylePaddingLeft, stylePaddingTop, styleBorderLeft, styleBorderTop; // Padding and border style widths for mouse offsets
 var offsetx, offsety;
 
+init();
+
 ////////////////////////////////////////////////////////////////////////////////
 /////// OBJECTOS ///////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +48,7 @@ function object()
     this.selectable = true;
     this.inColision = false;
     this.colisionDetected = false;
+    this.clicable = true;
     this.clicked = false;
     this.stickyClick = false;
     this.visible = true;
@@ -61,6 +66,7 @@ function imageObj()
     this.selectable = true;
     this.inColision = false;
     this.colisionDetected = false;
+    this.clicable = true;
     this.clicked = false;
     this.stickyClick = false;
     this.imageId = "logo";
@@ -81,6 +87,7 @@ function labelObject()
     this.selectable = false;
     this.inColision = false;
     this.colisionDetected = false;
+    this.clicable = true;
     this.clicked = false;
     this.stickyClick = false;
     this.visible = true;
@@ -92,30 +99,46 @@ function labelObject()
 ////////////////////////////////////////////////////////////////////////////////
 
 //Interface das funções de criação de objectos
-//function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick)
-//function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick)
-//function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick)
+//function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick, clicable)
+//function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick, clicable)
+//function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick, clicable)
 
 //Local onde são iniciados os objectos do jogo
 function GameInit()
 {
-    addObject("square", 500, 200, 100, 100, '#FFC02B', false, false, true, true);
-    addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false, true, true);
-    addObject("fork", 200, 100, 50, 100, '#2BB8FF', false, false, true, true);
-    addObject("fork", 150, 150, 50, 200, '#2BB8FF', false, false, true, true);
-    addObject("fork", 50, 150, 50, 100, '#2BB8FF', false, false, true, true);
-    addObject("fork", 250, 150, 50, 100, '#2BB8FF', false, false, true, true);
-    addObject("fork", 100, 250, 50, 50, '#2BB8FF', false, false, true, true);
-    addObject("fork", 200, 250, 50, 50, '#2BB8FF', false, false, true, true);
-    addImage("robot", 275, 325, 150, 150, "logo", false, false, true, true);
-    addImage("animals", 200, 500, 150, 150, "beaver", false, false, true, true);
-    addLabel("pergunta", 0, 0, 300, 100, 22, "Qual é a coisa qual é ela?", "22px verdana", true, true, true, true);
+    addLabel("pergunta", 150, 420, 300, 100, 22, "Qual a mistura certa?", "22px verdana", true, false, true, true, false);
+    addImage("blue", 120, 100, 300, 330, "blueBucket", true, false, true, true, false);
+    addImage("green", 100, 500, 100, 110, "greenBucket", true, true, true, true, true);
+    addImage("red", 220, 500, 100, 110, "redBucket", true, true, true, true, true);
+    addImage("yellow", 340, 500, 100, 110, "yellowBucket", true, true, true, true, true);
+    addLabel("respostaCerta", 125, 0, 300, 100, 22, "Muito bem azelha!!!", "40px verdana", true, false, false, true, false);
+    addLabel("respostaErrada", 125, 0, 300, 100, 22, "Burro do quaralho!!!", "40px verdana", true, false, false, true, false);
+//    addObject("square", 500, 200, 100, 100, '#FFC02B', false, true, true, false);
+//    addObject("fork", 100, 100, 50, 100, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 200, 100, 50, 100, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 150, 150, 50, 200, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 50, 150, 50, 100, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 250, 150, 50, 100, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 100, 250, 50, 50, '#2BB8FF', false, false, true, true);
+//    addObject("fork", 200, 250, 50, 50, '#2BB8FF', false, false, true, true);
+//    addImage("robot", 275, 325, 150, 150, "logo", false, false, true, true);
+//    addImage("animals", 200, 500, 150, 150, "beaver", false, false, true, true);
+//    addLabel("pergunta", 0, 0, 300, 100, 22, "Qual é a coisa qual é ela?", "22px verdana", true, true, true, true);
 }
 
 //Função que verifica as regras do jogo, despoletando acções. É chamada no draw()
 function GameRules()
 {
-    
+    if(GetObjectWithId("red").clicked)
+    {
+        GetObjectWithId("respostaErrada").visible = true;
+        LOSE = true;
+    }
+    else if(GetObjectWithId("yellow").clicked && GetObjectWithId("green").clicked)
+    {
+        GetObjectWithId("respostaCerta").visible = true;
+        WIN = true;
+    }
 }
 
 function init()
@@ -144,7 +167,7 @@ function init()
     GameInit();
 };
 
-function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick)
+function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, selectable, visible, stickyClick, clicable)
 {
     var labelObj = new labelObject();
     labelObj.id = id;
@@ -159,11 +182,12 @@ function addLabel(id, posX, posY, width, height, fontSize, text, font, ghost, se
     labelObj.visible = visible;
     labelObj.text = text;
     labelObj.stickyClick = stickyClick;
+    labelObj.clicable = clicable;
     Objects.push(labelObj);
     invalidate();
 }
 
-function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick)
+function addImage(id, posX, posY, width, height, imageId, ghost, selectable, visible, stickyClick, clicable)
 {
     var img = new imageObj();
     img.id = id;
@@ -176,11 +200,12 @@ function addImage(id, posX, posY, width, height, imageId, ghost, selectable, vis
     img.selectable = selectable;
     img.visible = visible;
     img.stickyClick = stickyClick;
+    img.clicable = clicable;
     Objects.push(img);
     invalidate();
 }
 
-function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick)
+function addObject(id, posX, posY, width, height, fill, ghost, selectable, visible, stickyClick, clicable)
 {
     var obj = new object();
     obj.id = id;
@@ -193,6 +218,7 @@ function addObject(id, posX, posY, width, height, fill, ghost, selectable, visib
     obj.selectable = selectable;
     obj.visible = visible;
     obj.stickyClick = stickyClick;
+    obj.clicable = clicable;
     Objects.push(obj);
     invalidate();
 }
@@ -203,19 +229,22 @@ function addObject(id, posX, posY, width, height, fill, ghost, selectable, visib
 
 function MouseDown(e)
 {
-    selectedObject = ClickedObject(e);
-    
-    if(!selectedObject.ghost)
-        selectedObject.clicked = !selectedObject.clicked;
-    
-    if(selectedObject !== null)
+    if(WIN === false && LOSE === false)
     {
-        isDrag = true;
-        offsetx = mousePosX - selectedObject.x;
-        offsety = mousePosY - selectedObject.y;
-        canvas.onmousemove = OnMouseMove;
+        selectedObject = ClickedObject(e);
+
+     if(selectedObject.clicable)
+          selectedObject.clicked = !selectedObject.clicked;
+
+       if(selectedObject !== null)
+       {
+           isDrag = true;
+           offsetx = mousePosX - selectedObject.x;
+           offsety = mousePosY - selectedObject.y;
+           canvas.onmousemove = OnMouseMove;
+       }
+       invalidate();       
     }
-    invalidate();
 }
 
 function MouseUp()
@@ -238,7 +267,7 @@ function ClickedObject(e)
         {
             if (Objects[i].x <= mousePosX && Objects[i].x + Objects[i].w >= mousePosX)
                         if (Objects[i].y <= mousePosY && Objects[i].y + Objects[i].h >= mousePosY)
-                            if(!Objects[i].ghost)
+                            //if(!Objects[i].ghost)
                                 return Objects[i];            
         }
     }
@@ -246,7 +275,7 @@ function ClickedObject(e)
 }
 
 function OnMouseMove(e){ //Eu estive aqui - JA
-  if (isDrag)
+  if (isDrag && !selectedObject.ghost)
   {
     getMouse(e);
    
@@ -404,11 +433,11 @@ function draw()
     
     // draw selection
     // right now this is just a stroke along the edge of the selected box
-    if (selectedObject !== null && selectedObject.selectable) {
-      canvasContext.strokeStyle = mySelColor;
-      canvasContext.lineWidth = mySelWidth;
-      canvasContext.strokeRect(selectedObject.x,selectedObject.y,selectedObject.w,selectedObject.h);
-    }
+//    if (selectedObject !== null && selectedObject.selectable) {
+//      canvasContext.strokeStyle = mySelColor;
+//      canvasContext.lineWidth = mySelWidth;
+//      canvasContext.strokeRect(selectedObject.x,selectedObject.y,selectedObject.w,selectedObject.h);
+//    }
     
     // Add stuff you want drawn on top all the time here
     
@@ -425,7 +454,7 @@ function drawLabel(labelObj)
         canvasContext.font=labelObj.font;
         canvasContext.fillText(labelObj.text, labelObj.x, labelObj.y + labelObj.h/2, labelObj.w, labelObj.h);
 
-        if(labelObj.inColision)
+        if(labelObj.inColision || labelObj.clicked)
         {
           canvasContext.strokeStyle = mySelColor;
           canvasContext.lineWidth = mySelWidth;
@@ -441,7 +470,7 @@ function drawimage(imageObj)
    
     canvasContext.drawImage(img, imageObj.x, imageObj.y, imageObj.w, imageObj.h);
     
-    if(imageObj.inColision)
+    if(imageObj.inColision || imageObj.clicked)
     {
       canvasContext.strokeStyle = mySelColor;
       canvasContext.lineWidth = mySelWidth;
@@ -459,7 +488,7 @@ function drawshape(shape)
 
     canvasContext.fillRect(shape.x,shape.y,shape.w,shape.h);
     
-    if(shape.inColision)
+    if(shape.inColision || shape.clicked)
     {
       canvasContext.strokeStyle = mySelColor;
       canvasContext.lineWidth = mySelWidth;
@@ -471,7 +500,6 @@ function invalidate() {
   canvasValid = false;
 }
 
-//wipes the canvas context
 function clear(c) {
   c.clearRect(0, 0, width, height);
 }
@@ -490,4 +518,12 @@ function GetObjectsWithId(id)
             ObjectsTemp.push(Objects[i]);
     
     return ObjectsTemp;
+}
+
+//Devolve o 1º objecto que apareça como o ID recebido
+function GetObjectWithId(id)
+{
+    for(var i = 0; i < Objects.length; i++)
+        if(Objects[i].id === id)
+            return Objects[i];
 }
